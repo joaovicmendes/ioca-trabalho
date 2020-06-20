@@ -60,8 +60,8 @@ def knapsackNaive(num_items, items, capacity, num_conflicts, conflicts):
     solution_value = 0
     solution_weight = 0
 
-    # solution sorted by value
-    items.sort(key=item_key)
+    # item list sorted by value per weight
+    items.sort(reverse=True, key=item_key)
 
     for item in items:
         if solution_weight + item.weight <= capacity:
