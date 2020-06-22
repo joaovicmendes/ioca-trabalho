@@ -73,21 +73,26 @@ def knapsackILP(num_items, items, capacity, num_conflicts, conflicts):
 
     # Definição das restrições
     # Restrição de limite de capacidade da mochila
-    capacity_constraint = solver.RowConstraint(0, capacity, '')
-    for i in range(num_items):
-        capacity_constraint.SetCoefficient(x[i], items[i].weight)
+    solver.Add(sum(x[i] * items[i].weight for i in range(num_items)) <= capacity)
+
+    # Modelagem antiga
+    # capacity_constraint = solver.RowConstraint(0, capacity, '')
+    # for i in range(num_items):
+    #     capacity_constraint.SetCoefficient(x[i], items[i].weight)
 
     # Restrição de objetos incompatíveis
     for i in range(num_items):
         for conflict in items[i].conflicts:
             solver.Add(x[i]+x[conflict] <= 1)
 
-
     # Definição do Objetivo
-    objective = solver.Objective()
-    for i in range(num_items):
-        objective.SetCoefficient(x[i], items[i].value)
-    objective.SetMaximization()
+    solver.Maximize(sum(x[i] * items[i].value for i in range(num_items)))
+
+    # Modelagem antiga
+    # objective = solver.Objective()
+    # for i in range(num_items):
+    #     objective.SetCoefficient(x[i], items[i].value)
+    # objective.SetMaximization()
 
     # Solução final
     status = solver.Solve()
