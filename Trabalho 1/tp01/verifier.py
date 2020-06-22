@@ -5,7 +5,7 @@ from os.path import isfile, join
 from collections import namedtuple
 Item = namedtuple("Item", ['index', 'value', 'weight'])
 
-DEBUG = 2
+DEBUG = 0
 
 
 def check_feasibility(instance_path):
