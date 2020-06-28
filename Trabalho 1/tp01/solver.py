@@ -1,15 +1,13 @@
-    # Universidade Federal de São Carlos – UFSCar
-    # Departamento de Computação
-    # Introdução a Otimização Combinatória Aplicada – Trabalho 1
-    # Prof. Dr. Mário César San Felice
-    # Aluno: João Victor Mendes Freire
-    # RA: 758943
+# Universidade Federal de São Carlos – UFSCar
+# Departamento de Computação
+# Introdução a Otimização Combinatória Aplicada – Trabalho 1
+# Prof. Dr. Mário César San Felice
+# Aluno: João Victor Mendes Freire
+# RA: 758943
 
 from ortools.linear_solver import pywraplp
 from collections import namedtuple
-Item = namedtuple("Item", ['index', 'value', 'weight', 'conflicts'])
-#                                                       ^
-# Modificação para incluir os conflitos como lista de adjacência dos itens
+Item = namedtuple("Item", ['index', 'value', 'weight'])
 
 DEBUG = 0
 
@@ -28,15 +26,12 @@ def solve_it(input_data):
     for i in range(1, item_count+1):
         line = lines[i]
         parts = line.split()
-        items.append(Item(i-1, int(parts[0]), int(parts[1]), []))
+        items.append(Item(i-1, int(parts[0]), int(parts[1])))
 
     for i in range(1, conflict_count+1):
         line = lines[item_count + i]
         parts = line.split()
         conflicts.append((int(parts[0]), int(parts[1])))
-        # Modificação para incluir os conflitos como lista de adjacência dos itens
-        items[int(parts[0])].conflicts.append(int(parts[1]))
-        items[int(parts[1])].conflicts.append(int(parts[0]))
 
     return knapsackILP(item_count, items, capacity, conflict_count, conflicts)
 
@@ -81,9 +76,8 @@ def knapsackILP(num_items, items, capacity, num_conflicts, conflicts):
     #     capacity_constraint.SetCoefficient(x[i], items[i].weight)
 
     # Restrição de objetos incompatíveis
-    for i in range(num_items):
-        for conflict in items[i].conflicts:
-            solver.Add(x[i]+x[conflict] <= 1)
+    for conflict in conflicts:
+        solver.Add(x[conflict[0]]+x[conflict[1]] <= 1)
 
     # Definição do Objetivo
     solver.Maximize(sum(x[i] * items[i].value for i in range(num_items)))
