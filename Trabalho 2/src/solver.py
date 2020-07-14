@@ -1,6 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+# Universidade Federal de São Carlos – UFSCar
+# Departamento de Computação
+# Introdução a Otimização Combinatória Aplicada – Trabalho 2
+# Prof. Dr. Mário César San Felice
+# Aluno: João Victor Mendes Freire
+# RA: 758943
+
 from collections import namedtuple
 import math
 
