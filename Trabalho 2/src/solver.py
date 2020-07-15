@@ -8,8 +8,13 @@
 # Aluno: João Victor Mendes Freire
 # RA: 758943
 
-from collections import namedtuple
+# Baseado em https://gurobi.github.io/modeling-examples/facility_location/facility_location.html
+
 import math
+import gurobipy as gp
+from gurobipy import GRB
+from itertools import product
+from collections import namedtuple
 
 Point = namedtuple("Point", ['x', 'y'])
 Facility = namedtuple("Facility", ['index', 'setup_cost', 'capacity', 'location'])
@@ -38,8 +43,69 @@ def solve_it(input_data):
         parts = lines[i].split()
         customers.append(Customer(i-1-facility_count, int(parts[0]), Point(float(parts[1]), float(parts[2]))))
 
-    return facilityNaive(facility_count, facilities, customer_count, customers)
+    return facilityILP(facility_count, facilities, customer_count, customers)
 
+def facilityILP(facility_count, facilities, customer_count, customers):
+
+    # Variaveis auxiliares    
+    custo = []
+    capacidade = []
+    pontos_facility = []
+
+    for f in facilities:
+        custo.append(f.setup_cost)
+        capacidade.append(f.capacity)
+        pontos_facility.append(f.location)
+
+    demanda = []
+    pontos_customer = []
+
+    for c in customers:
+        demanda.append(c.demand)
+        pontos_customer.append(c.location)
+
+    cartesian_prod = list(product(range(customer_count), range(facility_count)))
+
+    dist = {(c,f): length(pontos_customer[c], pontos_facility[f]) for c, f in cartesian_prod}
+
+    # Início do modelo
+    m = gp.Model('CFL')
+
+    # Variáveis indicadoras
+    instals = m.addVars(facility_count, vtype=GRB.BINARY, name='instals')
+    atrib = m.addVars(cartesian_prod, vtype=GRB.BINARY, name='atrib')
+
+    # Cliente só pode usar instalação que foi aberta
+    m.addConstrs(
+        (atrib[(c,f)] <= instals[f] for c,f in cartesian_prod),
+        name='Abertura'
+        )
+
+    # Limite da capacidade de cada instalação
+    m.addConstrs(
+        (gp.quicksum(demanda[c]*atrib[(c,f)]
+        for c in range(customer_count)) <= capacidade[f]
+        for f in range(facility_count)),
+        name='Demanda'
+        )
+
+    # Cada cliente tem apenas uma atribuição
+    m.addConstrs(
+        (gp.quicksum(atrib[(c,f)] for f in range(facility_count)) == 1
+        for c in range(customer_count)),
+        name='AtribUnica'
+        )
+
+    m.setObjective(instals.prod(custo)+atrib.prod(dist), GRB.MINIMIZE)
+    m.optimize()
+
+    final = []
+    for customer, facility in atrib.keys():
+        if (abs(atrib[customer, facility].x) > 1e-6):
+            final.append(facility)
+
+    output_data = ' '.join(map(str, final))
+    return output_data
 
 def facilityNaive(facility_count, facilities, customer_count, customers):
 
@@ -90,7 +156,6 @@ def facilityNaive(facility_count, facilities, customer_count, customers):
     output_data += ' '.join(map(str, solution))
 
     return output_data
-
 
 if __name__ == '__main__':
     import sys
