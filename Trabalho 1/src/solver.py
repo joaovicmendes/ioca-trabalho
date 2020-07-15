@@ -77,8 +77,11 @@ def knapsackILP(num_items, items, capacity, num_conflicts, conflicts):
     # Definição do Objetivo
     solver.Maximize(sum(x[i] * items[i].value for i in range(num_items)))
 
+    param = pywraplp.MPSolverParameters()
+    param.SetDoubleParam(param.RELATIVE_MIP_GAP, 1/100000)
+
     # Solução final
-    status = solver.Solve()
+    status = solver.Solve(param)
     solution_value = int(solver.Objective().Value()) if status == pywraplp.Solver.OPTIMAL else -1
     for i in range(num_items):
         solution[i] = int(x[i].solution_value())

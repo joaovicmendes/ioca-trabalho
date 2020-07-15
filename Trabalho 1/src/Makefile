@@ -28,5 +28,5 @@ test:
 	python3 verifier.py ks_400_0_wc 2
 	python3 verifier.py ks_1000_0 2
 	python3 verifier.py ks_1000_0_wc 2
-	python3 verifier.py ks_10000_0 1
-	python3 verifier.py ks_10000_0_wc 1
+	python3 verifier.py ks_10000_0 2
+	python3 verifier.py ks_10000_0_wc 2
