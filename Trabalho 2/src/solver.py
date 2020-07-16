@@ -104,7 +104,9 @@ def facilityILP(facility_count, facilities, customer_count, customers):
         if (abs(atrib[customer, facility].x) > 1e-6):
             final.append(facility)
 
-    output_data = ' '.join(map(str, final))
+    # prepare the solution in the specified output format
+    output_data = '%.2f' % m.ObjVal + '\n'
+    output_data += ' '.join(map(str, final))
     return output_data
 
 def facilityNaive(facility_count, facilities, customer_count, customers):
