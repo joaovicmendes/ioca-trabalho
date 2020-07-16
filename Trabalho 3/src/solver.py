@@ -5,6 +5,8 @@
 # Aluno: João Victor Mendes Freire
 # RA: 758943
 
+from collections import deque
+
 DEBUG = 0
 
 def solve_it(input_data):
@@ -33,12 +35,15 @@ def solve_it(input_data):
 
     nodes = []
     for i in range(node_count):
-        nodes.append([])
+        nodes.append({'index': i, 'degree': 0, 'edges': []})
 
     for edge in edges:
         v, u = edge[0], edge[1]
-        nodes[v].append(u)
-        nodes[u].append(v)
+        nodes[v]['edges'].append(u)
+        nodes[u]['edges'].append(v)
+    
+    for node in nodes:
+        node['degree'] = len(node['edges'])
 
     return ColoringGreedy(node_count, edge_count, nodes)
 
@@ -48,21 +53,27 @@ def ColoringGreedy(node_count, edge_count, nodes):
     color_count = 0
     colors = [-1]*node_count
     available_colors = [True]*node_count
+
+    # Ordena por ordem de grau dos vértices
+    nodes.sort(key=node_key, reverse=True)
+
+    queue = deque(nodes)
     
     # O primeiro vétice pode ter qualquer cor
-    colors[0] = 0
+    colors[queue.popleft()['index']] = 0
 
     # Para os demais vétices
-    for i in range(1, node_count):
+    while queue:
         # Verifica quais cores estão disponiveis, olhando os adjacentes
-        for edge in nodes[i]:
+        node = queue.popleft()
+        for edge in node['edges']:
             if colors[edge] != -1:
                 available_colors[colors[edge]] = False
         
         # Colore com a primeira cor disponível
         for j in range(node_count):
             if available_colors[j] == True:
-                colors[i] = j
+                colors[node['index']] = j
                 break
         
         # Reseta a lista de cores disponíveis para a próxima iteração
@@ -81,6 +92,9 @@ def ColoringGreedy(node_count, edge_count, nodes):
     output_data += ' '.join(map(str, colors))
 
     return output_data
+
+def node_key(node):
+    return node['degree']
 
 def ColoringNaive(node_count, edge_count, edges):
 
