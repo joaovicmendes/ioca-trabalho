@@ -1,3 +1,9 @@
+# Universidade Federal de São Carlos – UFSCar
+# Departamento de Computação
+# Introdução a Otimização Combinatória Aplicada – Trabalho 3
+# Prof. Dr. Mário César San Felice
+# Aluno: João Victor Mendes Freire
+# RA: 758943
 
 DEBUG = 0
 
@@ -25,8 +31,56 @@ def solve_it(input_data):
             print(edge)
         print()
 
-    return ColoringNaive(node_count, edge_count, edges)
+    nodes = []
+    for i in range(node_count):
+        nodes.append([])
 
+    for edge in edges:
+        v, u = edge[0], edge[1]
+        nodes[v].append(u)
+        nodes[u].append(v)
+
+    return ColoringGreedy(node_count, edge_count, nodes)
+
+
+def ColoringGreedy(node_count, edge_count, nodes):
+
+    color_count = 0
+    colors = [-1]*node_count
+    available_colors = [True]*node_count
+    
+    # O primeiro vétice pode ter qualquer cor
+    colors[0] = 0
+
+    # Para os demais vétices
+    for i in range(1, node_count):
+        # Verifica quais cores estão disponiveis, olhando os adjacentes
+        for edge in nodes[i]:
+            if colors[edge] != -1:
+                available_colors[colors[edge]] = False
+        
+        # Colore com a primeira cor disponível
+        for j in range(node_count):
+            if available_colors[j] == True:
+                colors[i] = j
+                break
+        
+        # Reseta a lista de cores disponíveis para a próxima iteração
+        for j in range(node_count):
+            available_colors[j] == True  
+
+    aux = [0]*node_count
+    for i in range(node_count):
+        aux[colors[i]] += 1
+    for i in range(node_count):
+        if aux[i] > 0:
+            color_count += 1
+
+    # prepare the solution in the specified output format
+    output_data = str(color_count) + '\n'
+    output_data += ' '.join(map(str, colors))
+
+    return output_data
 
 def ColoringNaive(node_count, edge_count, edges):
 
@@ -40,7 +94,6 @@ def ColoringNaive(node_count, edge_count, edges):
     output_data += ' '.join(map(str, solution))
 
     return output_data
-
 
 if __name__ == '__main__':
     import sys
