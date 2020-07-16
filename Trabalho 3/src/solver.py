@@ -5,6 +5,9 @@
 # Aluno: João Victor Mendes Freire
 # RA: 758943
 
+import gurobipy as gp
+from itertools import product
+from gurobipy import GRB
 from collections import deque
 
 DEBUG = 0
@@ -45,8 +48,51 @@ def solve_it(input_data):
     for node in nodes:
         node['degree'] = len(node['edges'])
 
-    return ColoringGreedy(node_count, edge_count, nodes)
+    return ColoringILP(node_count, edge_count, edges)
 
+def ColoringILP(node_count, edge_count, edges):
+    color_count = 0
+    max_colors = node_count
+    cartesian_prod = list(product(range(node_count), range(max_colors)))
+
+    # Início do modelo
+    m = gp.Model('vertex_colouring')
+
+    # Variáveis indicadoras
+    # Número de cores utilizadas
+    y = m.addVars(max_colors, vtype=GRB.BINARY, name='used_colors')
+    # Qual vértice foi colorido com qual cor
+    x = m.addVars(cartesian_prod, vtype=GRB.BINARY, name='colors')
+
+    # Restrições
+    # Apenas uma cor pode ser atribuída a cada vértice
+    for i in range(node_count):
+        m.addConstr(sum(x[i,k] for k in range(max_colors)) == 1, name='UnicaCor')
+    
+    # Um vértice só pode ter uma cor atribuída caso ela seja utilizada
+    for i, j in edges:
+        m.addConstrs((x[i,k]+x[j,k] <= y[k] for k in range(max_colors)), name='Utilizada')
+
+    # Restrição extra para remover simetria no espaço de busca
+        m.addConstrs((y[k] >= y[k+1] for k in range(max_colors-1)), name='simetria')
+
+    # Objetivo: minimizar o somatório das core utilizadas
+    m.setObjective(gp.quicksum(y[k] for k in range(max_colors)), GRB.MINIMIZE)
+    m.optimize()
+
+    for i in range(max_colors):
+        if y[i].x == 1:
+            color_count += 1
+
+    colors = [-1]*node_count
+    for client, color in x.keys():
+        colors[client] = color
+
+    # prepare the solution in the specified output format
+    output_data = str(color_count) + '\n'
+    output_data += ' '.join(map(str, colors))
+
+    return output_data
 
 def ColoringGreedy(node_count, edge_count, nodes):
 
