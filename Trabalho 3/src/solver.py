@@ -5,9 +5,7 @@
 # Aluno: João Victor Mendes Freire
 # RA: 758943
 
-import gurobipy as gp
-from itertools import product
-from gurobipy import GRB
+from ortools.sat.python import cp_model
 from collections import deque
 
 DEBUG = 0
@@ -51,42 +49,51 @@ def solve_it(input_data):
     return ColoringILP(node_count, edge_count, edges)
 
 def ColoringILP(node_count, edge_count, edges):
+    colors = [-1 for i in range(node_count)]
     color_count = 0
     max_colors = node_count
-    cartesian_prod = list(product(range(node_count), range(max_colors)))
 
     # Início do modelo
-    m = gp.Model('vertex_colouring')
+    m = cp_model.CpModel()
 
     # Variáveis indicadoras
     # Número de cores utilizadas
-    y = m.addVars(max_colors, vtype=GRB.BINARY, name='used_colors')
+    y = []
+    for k in range(max_colors):
+        y.append(m.NewIntVar(0, 1, f'y[{k}]'))
+
     # Qual vértice foi colorido com qual cor
-    x = m.addVars(cartesian_prod, vtype=GRB.BINARY, name='colors')
+    x = [[] for i in range(node_count)]
+    for i in range(node_count):
+        for k in range(max_colors):
+            x[i].append(m.NewIntVar(0, 1, f'x[{i},{k}]'))
 
     # Restrições
     # Apenas uma cor pode ser atribuída a cada vértice
     for i in range(node_count):
-        m.addConstr(sum(x[i,k] for k in range(max_colors)) == 1, name='UnicaCor')
+        m.Add(sum(x[i][k] for k in range(max_colors)) == 1)
     
     # Um vértice só pode ter uma cor atribuída caso ela seja utilizada
     for i, j in edges:
-        m.addConstrs((x[i,k]+x[j,k] <= y[k] for k in range(max_colors)), name='Utilizada')
+        for k in range(max_colors):
+            m.Add(x[i][k]+x[j][k] <= y[k])
 
     # Restrição extra para remover simetria no espaço de busca
-        m.addConstrs((y[k] >= y[k+1] for k in range(max_colors-1)), name='simetria')
+    for k in range(max_colors-1):
+        m.Add(y[k] >= y[k+1])
 
     # Objetivo: minimizar o somatório das core utilizadas
-    m.setObjective(gp.quicksum(y[k] for k in range(max_colors)), GRB.MINIMIZE)
-    m.optimize()
+    m.Minimize(sum(y[k] for k in range(max_colors)))
+    
+    solver = cp_model.CpSolver()
+    status = solver.Solve(m)
 
-    for i in range(max_colors):
-        if y[i].x == 1:
-            color_count += 1
+    color_count = int(solver.ObjectiveValue())
 
-    colors = [-1]*node_count
-    for client, color in x.keys():
-        colors[client] = color
+    for i in range(node_count):
+        for k in range(max_colors):
+            if int(solver.Value(x[i][k])) == 1:
+                colors[i] = k
 
     # prepare the solution in the specified output format
     output_data = str(color_count) + '\n'
