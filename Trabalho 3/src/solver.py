@@ -46,6 +46,9 @@ def solve_it(input_data):
     for node in nodes:
         node['degree'] = len(node['edges'])
 
+    if node_count >= 1000:
+        return ColoringGreedy(node_count, edge_count, nodes)
+
     return ColoringILP(node_count, edge_count, edges)
 
 def ColoringILP(node_count, edge_count, edges):
