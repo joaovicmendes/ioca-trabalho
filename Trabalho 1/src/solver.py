@@ -11,6 +11,7 @@ Item = namedtuple("Item", ['index', 'value', 'weight'])
 
 DEBUG = 0
 
+# Função que resolve o problema
 def solve_it(input_data):
     # parse the input
     lines = input_data.split('\n')
@@ -35,7 +36,7 @@ def solve_it(input_data):
 
     return knapsackILP(item_count, items, capacity, conflict_count, conflicts)
 
-
+# Resolve o problema da mochila usando programação linear inteira
 def knapsackILP(num_items, items, capacity, num_conflicts, conflicts):
 
     if DEBUG >= 1:
